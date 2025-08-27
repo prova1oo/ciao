@@ -25,7 +25,6 @@ mvn_settings_path="${prj_home}/.mvn/settings.xml"
 }
 
 echo "Deploy using Maven settings '${mvn_settings_path}'"
-mvn --no-transfer-progress --batch-mode --activate-profiles "$mvn_profiles" -s "$mvn_settings_path" install deploy
 
 mvn --no-transfer-progress --batch-mode --activate-profiles "$mvn_profiles" \
     -s "$mvn_settings_path" deploy \
