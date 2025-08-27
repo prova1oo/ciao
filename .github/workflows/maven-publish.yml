@@ -17,6 +17,8 @@ jobs:
         java-version: '17'
         distribution: 'zulu'
     - name: Publish package
-      run: ./.sdlc/deploy-release
+      run: |
+        chmod +x ./.sdlc/deploy-release
+        ./.sdlc/deploy-release
       env:
         GITHUB_TOKEN: ${{ github.token }}
