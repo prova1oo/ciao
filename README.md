@@ -3,6 +3,11 @@ creazione PAT public-01
 
 da user profile -> token owner "organization name"
 
+il token deve avere permessi di:
+
+- content
+- workflow
+
 settings:
 
 ```xml
