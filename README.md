@@ -1,64 +1,156 @@
 
-# Library dash
+creazione PAT public-01 
 
-![CI](https://github.com/enr/dash/workflows/CI/badge.svg)
+da user profile -> token owner "organization name"
 
-[![](https://jitpack.io/v/enr/dash.svg)](https://jitpack.io/#enr/dash)
+settings:
 
-Java library
+```xml
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                      http://maven.apache.org/xsd/settings-1.0.0.xsd">
 
+  <activeProfiles>
+    <activeProfile>github</activeProfile>
+  </activeProfiles>
 
-CI (test, check su formattazione, produzione documentazione...):
+  <profiles>
+    <profile>
+      <id>github</id>
+      <repositories>
+        <repository>
+          <id>central</id>
+          <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+        <repository>
+          <id>github</id>
+          <!--
+          Ensure that the repository URL adheres to the format: 
+          https://maven.pkg.github.com/OWNER/REPO. 
+          You have the flexibility to use a wildcard (*) in place 
+          of the OWNER, allowing Maven to install dependencies from 
+          the repository's owner dynamically.
+          -->
+          <url>https://maven.pkg.github.com/OWNER/*</url>
+          <snapshots>
+            <enabled>true</enabled>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
 
-```
-mvn install -Pci
-```
-
-Profilo fast (no test, checks, etc...):
-
-```
-mvn install -Pfast
-```
-
-Tag di sorgenti con modifiche versioni dei pom:
-
-```
-./.sdlc/release [RELEASE_VERSION] [NEXT_SNAPSHOT]
-```
-
-Esempio, portare la versione `0.0.1-SNAPSHOT` alla versione `0.0.1` e tornare a `0.0.2-SNAPSHOT`:
-
-```
-.sdlc/release 0.0.1 0.0.2
-```
-
-Profilo release (deployment di javadoc e sources):
-
-```
-mvn deploy -Prelease
-```
-
-Riparare formattazione (profilo fmt):
-
-```
-mvn -Pfmt
-```
-
-Test coverage:
-
-```
-mvn org.jacoco:jacoco-maven-plugin:0.8.11:prepare-agent install org.jacoco:jacoco-maven-plugin:0.8.11:report-aggregate -Daggregate=true
-```
-
-Generate Java docs:
-
-```
-mvn org.apache.maven.plugins:maven-javadoc-plugin:3.4.1:aggregate
+  <servers>
+    <server>
+      <id>github</id>
+      <username>${env.MAVEN_REPO_USER}</username>
+      <password>${env.MAVEN_REPO_PASS}</password>
+    </server>
+  </servers>
+</settings>
 ```
 
-Download sources e javadoc delle dipendenze:
+publishing
 
+`altDeploymentRepository`	Specifies an alternative repository to which the project artifacts should be deployed (other than those specified in `distributionManagement`).
+Format: `id::url`
+- id: The id can be used to pick up the correct credentials from the settings.xml
+- url: The location of the repository
+
+`altReleaseDeploymentRepository`: 	The alternative repository to use when the project has a final version.
+
+`altSnapshotDeploymentRepository`:	String	2.8	The alternative repository to use when the project has a snapshot version
+
+```sh
+mvn --no-transfer-progress --batch-mode --activate-profiles "$mvn_profiles" \
+    -s "$mvn_settings_path" deploy \
+    -Dhttps.protocols=TLSv1.2 \
+    "-DaltDeploymentRepository=nexus.archiva::http://nexus.archivagroup.it:8081/repository/maven-snapshots" \
+    "-DaltReleaseDeploymentRepository=nexus.archiva::http://nexus.archivagroup.it:8081/repository/maven-releases"
 ```
-mvn dependency:sources dependency:resolve -Dhttps.protocols=TLSv1.2
-mvn dependency:sources dependency:resolve -Dclassifier=javadoc -Dhttps.protocols=TLSv1.2
+
+con `alt*Deploymentrepository` eviti di dover scrivere nel pom questo:
+
+```xml
+<distributionManagement>
+  <repository>
+   <id>github</id>
+   <name>Github</name>
+   <url>https://maven.pkg.github.com/cal0610/medium-auth-commons</url>
+  </repository>
+  <snapshotRepository>
+   <id>github</id>
+   <url>https://maven.pkg.github.com/cal0610/medium-auth-commons</url>
+  </snapshotRepository>
+ </distributionManagement>
 ```
+
+GH action per publisher .github/workflows/maven-publish.yml
+
+```yaml
+name: Publish Package
+on:
+  push:
+    branches:
+      - '*'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'zulu'
+    - name: Publish package
+      run: ./mvnw deploy
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+```
+
+GH action per consumer
+
+Create .github/workflows/build.yml in the root directory
+
+Press enter or click to view image in full size
+
+```yaml
+name: Maven Package
+on:
+  push:
+    branches:
+      - '*'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'zulu'
+    # - name: Replace Maven Credentials
+    #   run: |
+    #     sed -i 's/USERNAME/${{ secrets.USERNAME }}/g' .github/settings.xml
+    #     sed -i 's/PASSWORD/${{ secrets.PASSWORD }}/g' .github/settings.xml
+    - name: Install
+      run: ./mvnw clean install -s .github/settings.xml
+      env:
+        GITHUB_TOKEN: ${{ secrets.github.token }}
+```
+
+RRF
+
+```sh
+$cat .mvn/rrf/groupId-github.txt
+com.github.atoito
+```
+
+
+
