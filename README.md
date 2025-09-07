@@ -71,8 +71,8 @@ Format: `id::url`
 mvn --no-transfer-progress --batch-mode --activate-profiles "$mvn_profiles" \
     -s "$mvn_settings_path" deploy \
     -Dhttps.protocols=TLSv1.2 \
-    "-DaltDeploymentRepository=nexus.archiva::http://nexus.archivagroup.it:8081/repository/maven-snapshots" \
-    "-DaltReleaseDeploymentRepository=nexus.archiva::http://nexus.archivagroup.it:8081/repository/maven-releases"
+    "-DaltDeploymentRepository=nexusa::http://nexus.a.it:8081/repository/maven-snapshots" \
+    "-DaltReleaseDeploymentRepository=nexusa::http://nexus.a.it:8081/repository/maven-releases"
 ```
 
 con `alt*Deploymentrepository` eviti di dover scrivere nel pom questo:
