@@ -1,7 +1,7 @@
 
 creazione PAT public-01 
 
-da user profile -> token owner "organization name"
+da user profile -> token owner : "organization name"
 
 il token deve avere permessi di:
 
@@ -49,8 +49,9 @@ settings:
   <servers>
     <server>
       <id>github</id>
-      <username>${env.MAVEN_REPO_USER}</username>
-      <password>${env.MAVEN_REPO_PASS}</password>
+      <!-- the name of the personal account or organization that owns the repository -->
+      <username>OWNER</username>
+      <password>${env.GITHUB_TOKEN}</password>
     </server>
   </servers>
 </settings>
@@ -70,9 +71,14 @@ Format: `id::url`
 ```sh
 mvn --no-transfer-progress --batch-mode --activate-profiles "$mvn_profiles" \
     -s "$mvn_settings_path" deploy \
+<<<<<<< HEAD
     -Dhttps.protocols=TLSv1.2 \
     "-DaltDeploymentRepository=nexusa::http://nexus.a.it:8081/repository/maven-snapshots" \
     "-DaltReleaseDeploymentRepository=nexusa::http://nexus.a.it:8081/repository/maven-releases"
+=======
+    "-DaltDeploymentRepository=github::https://maven.pkg.github.com/enr/messages" \
+    "-DaltReleaseDeploymentRepository=github::https://maven.pkg.github.com/enr/messages"
+>>>>>>> 89b377e (wip)
 ```
 
 con `alt*Deploymentrepository` eviti di dover scrivere nel pom questo:
@@ -98,6 +104,8 @@ name: Publish Package
 on:
   push:
     branches:
+      - '*'
+    tags:
       - '*'
 jobs:
   build:
